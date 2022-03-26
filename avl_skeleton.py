@@ -14,12 +14,18 @@ class AVLNode(object):
 	@type value: str
 	@param value: data of your node
 	"""
-	def __init__(self, value):
+	def __init__(self, value, parent, is_virtual=False):
 		self.value = value
-		self.left = None
-		self.right = None
-		self.parent = None
-		self.height = -1
+		self.parent = parent
+		
+		if not is_virtual:
+			self.left = AVLNode(None, self, True)
+			self.right = self.left
+			self.height = 0
+		else:
+			self.left = None
+			self.right = None
+			self.height = -1
 		
 
 	"""returns the left child
@@ -27,7 +33,7 @@ class AVLNode(object):
 	@returns: the left child of self, None if there is no left child
 	"""
 	def getLeft(self):
-		return self.left
+		return self.left if self.isRealNode() else None
 
 
 	"""returns the right child
@@ -36,7 +42,7 @@ class AVLNode(object):
 	@returns: the right child of self, None if there is no right child
 	"""
 	def getRight(self):
-		return self.right
+		return self.right if self.isRealNode() else None
 
 	"""returns the parent 
 
@@ -133,7 +139,7 @@ class AVLTreeList(object):
 	@returns: True if the list is empty, False otherwise
 	"""
 	def empty(self):
-		return None
+		return self.root == None
 
 
 	"""retrieves the value of the i'th item in the list
@@ -245,6 +251,6 @@ class AVLTreeList(object):
 	@returns: the root, None if the list is empty
 	"""
 	def getRoot(self):
-		return None
+		self.root
 
 
