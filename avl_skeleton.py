@@ -14,18 +14,16 @@ class AVLNode(object):
 	@type value: str
 	@param value: data of your node
 	"""
-	def __init__(self, value, parent, is_virtual=False):
-		self.value = value
+	def __init__(self, value, parent, is_real=True):
 		self.parent = parent
-		
-		if not is_virtual:
-			self.left = AVLNode(None, self, True)
+		self.is_real = is_real
+
+		if is_real:
+			self.value = value
+			self.left = AVLNode(None, self, False)
 			self.right = self.left
 			self.height = 0
-		else:
-			self.left = None
-			self.right = None
-			self.height = -1
+			self.size = 1
 		
 
 	"""returns the left child
@@ -67,6 +65,14 @@ class AVLNode(object):
 	"""
 	def getHeight(self):
 		return self.height if self.isRealNode() else -1
+	
+	"""returns the size
+
+	@rtype: int
+	@returns: the size of self, 0 if the node is virtual
+	"""
+	def getSize(self):
+		return self.size if self.isRealNode() else 0
 
 	"""sets left child
 
@@ -100,13 +106,21 @@ class AVLNode(object):
 	def setValue(self, value):
 		self.value = value
 
-	"""sets the balance factor of the node
+	"""sets the height of the node
 
 	@type h: int
 	@param h: the height
 	"""
 	def setHeight(self, h):
 		self.height = h
+	
+	"""sets size factor of the node
+
+	@type s: int
+	@param s: the size
+	"""
+	def setSize(self, s):
+		self.size = s
 
 	"""returns whether self is not a virtual node 
 
@@ -114,7 +128,15 @@ class AVLNode(object):
 	@returns: False if self is a virtual node, True otherwise.
 	"""
 	def isRealNode(self):
-		return self.height > -1
+		return self.is_real
+	
+	"""updates height with respect to children"""
+	def updateHeight(self):
+		self.height = max(self.left.getHeight(), self.right.getHeight()) + 1
+	
+	"""updates size with respect to children"""
+	def updateSize(self):
+		self.size = self.left.getSize() + self.right.getSize() + 1
 
 
 
