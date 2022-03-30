@@ -14,19 +14,17 @@ class AVLNode(object):
 	@type value: str
 	@param value: data of your node
 
-	@type parent: AVLNode
-	@param parent: parent of node
-
 	@type is_real: bool
 	@param is_real: is node real or virtual
 	"""
-	def __init__(self, value, parent, is_real=True):
-		self.parent = parent
+	def __init__(self, value, is_real=True):
+		self.value = None
+		self.parent = None
 		self.is_real = is_real
 
 		if is_real:
 			self.value = value
-			self.left = AVLNode(None, self, False)
+			self.left = AVLNode(None, False)
 			self.right = self.left
 			self.height = 0
 			self.size = 1
@@ -142,11 +140,15 @@ class AVLNode(object):
 	def isRealNode(self):
 		return self.is_real
 	
-	"""updates height with respect to children"""
+	"""updates height with respect to children
+	
+	"""
 	def updateHeight(self):
 		self.height = max(self.left.getHeight(), self.right.getHeight()) + 1
 	
-	"""updates size with respect to children"""
+	"""updates size with respect to children
+	
+	"""
 	def updateSize(self):
 		self.size = self.left.getSize() + self.right.getSize() + 1
 
@@ -187,7 +189,7 @@ class AVLTreeList(object):
 	@returns: the the value of the i'th item in the list
 	"""
 	def retrieve(self, i):
-		return None
+		return self.select(i + 1)
 
 	"""inserts val at position i in the list
 
@@ -200,6 +202,33 @@ class AVLTreeList(object):
 	@returns: the number of rebalancing operation due to AVL rebalancing
 	"""
 	def insert(self, i, val):
+		z = AVLNode(val)
+
+		if i == self.length():
+
+			"find the maximum and make z its right child"
+			self.last().setRight(z)
+			z.setParent(self.last)
+			self.last = z
+		
+		else:
+
+			"find the node of rank i+1"
+			node = self.rank(i + 1) #TODO: self.rank
+			if node.getLeft() == None:
+
+				"if it has no left child make z its left child"
+				node.setLeft(z)
+				z.setParent(node)
+		
+			else:
+
+				"find its predecessor and make z its right child"
+				node = self.predecessor(node) #TODO: self.predecessor
+				node.setRight(z)
+				z.setParent(node)
+
+		#TODO: fix the tree
 		return -1
 
 
@@ -279,8 +308,6 @@ class AVLTreeList(object):
 	def search(self, val):
 		return None
 
-
-
 	"""returns the root of the tree representing the list
 
 	@rtype: AVLNode
@@ -288,5 +315,47 @@ class AVLTreeList(object):
 	"""
 	def getRoot(self):
 		self.root
+	
+	"""returns the rank of a node in the tree
+	
+	@type node: AVLNode
+	@pre: node is inside the tree
+	@param node: node to find rank of
+	@rtype: int
+	@returns: rank of node
+	"""
+	def rank(self, node):
+		return None
+	
+	"""returns the i-th node of the tree's in-order list
+	
+	@type i: int
+	@pre: 0 <= i <= self.length()
+	@param i: rank to search for
+	@rtype: AVLNode
+	@returns: node with rank i
+	"""
+	def select(self, i):
+		return None
+	
+	"""returns the successor of a given node
+	
+	@type node: AVLNode
+	@pre: node is inside the tree
+	@param node: node to start searching from
+	@rtype: AVLNode
+	@returns: successor of node
+	"""
+	def successor(self, node):
+		return None
 
-
+	"""returns the predecessor of a given node
+	
+	@type node: AVLNode
+	@pre: node is inside the tree
+	@param node: node to start searching from
+	@rtype: AVLNode
+	@returns: predecessor of node
+	"""
+	def predecessor(self, node):
+		return None
