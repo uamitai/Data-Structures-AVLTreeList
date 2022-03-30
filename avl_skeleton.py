@@ -85,7 +85,10 @@ class AVLNode(object):
 	"""
 	def setLeft(self, node):
 		if self.isRealNode():
-			self.left = node
+			if node == None:
+				self.left = AVLNode(None, False)
+			else:
+				self.left = node
 
 	"""sets right child
 
@@ -94,7 +97,10 @@ class AVLNode(object):
 	"""
 	def setRight(self, node):
 		if self.isRealNode():
-			self.right = node
+			if node == None:
+				self.right = AVLNode(None, False)
+			else:
+				self.right = node
 
 	"""sets parent
 
@@ -189,7 +195,7 @@ class AVLTreeList(object):
 	@returns: the the value of the i'th item in the list
 	"""
 	def retrieve(self, i):
-		return self.select(i + 1)
+		return self.select(i + 1).getValue()
 
 	"""inserts val at position i in the list
 
@@ -241,6 +247,45 @@ class AVLTreeList(object):
 	@returns: the number of rebalancing operation due to AVL rebalancing
 	"""
 	def delete(self, i):
+		z = self.select(i + 1)
+
+		if z.getLeft() == None and z.getRight() == None:
+
+			"z is a leaf, simply remove it"
+			node = z.getParent()
+			if z is node.getLeft():
+				node.setLeft(None)
+			elif z is node.getRight():
+				node.setRight(None)
+			del(z)
+		
+		elif z.getLeft() == None and z.getRight() != None:
+			
+			"z has only right child, bypass z"
+			node = z.getParent()
+			if z is node.getLeft():
+				node.setLeft(z.getRight())
+			elif z is node.getRight():
+				node.setRight(z.getRight())
+			del(z)
+		
+		elif z.getLeft() != None and z.getRight() == None:
+			
+			"z has only left child, bypass z"
+			node = z.getParent()
+			if z is node.getLeft():
+				node.setLeft(z.getLeft())
+			elif z is node.getRight():
+				node.setRight(z.getLeft())
+			del(z)
+		
+		else:
+
+			"z has two children"
+			y = self.successor(z) #TODO: self.successor
+			#TODO: remove y from tree
+
+		#TODO: fix the tree
 		return -1
 
 
