@@ -1,27 +1,29 @@
+from avl_skeleton import *
+from printree import *
+
 def tester():
     tree = AVLTreeList()
-    for i in range(5):
-        tree.insert(i, i)
+    
+    tree.insert(0, 0)
+    tree.insert(1, 1)
+    tree.insert(0, 2)
+    tree.insert(2, 3)
+    tree.insert(4, 4)
+    tree.insert(1, 5)
+    tree.insert(1, 6)
 
-    if tree.empty:
-        print("Error in empty() or insert(i, j)")
-    if tree.size != 5:
-        print("Error in size()")
-    if tree.retrieve(3) != 3:
-        print("Error in retrieve(i)")
+    print(tree.listToArray())
+    for line in printree(tree.root):
+        print(line)
 
-    tree.delete(2)
+    print("delete")
+    tree.delete(3)
 
-    if tree.size != 4:
-        print("Error in delete(i)")
-    if tree.first != 0:
-        print("Error in first()")
-    if tree.last != 4:
-        print("Error in last()")
+    print(tree.listToArray())
+    for line in printree(tree.root):
+        print(line)
 
-    tree.insert(2, 2)
     arr_tree = tree.listToArray()
-
     if arr_tree.length != 5:
         print("Error in listToArray()")
     for i in range(arr_tree.length):
