@@ -1,8 +1,8 @@
 #username - complete info
 #id1      - 325541878 
 #name1    - Amitai Wolf 
-#id2      - complete info
-#name2    - complete info  
+#id2      - 214208704
+#name2    - Eivi Katz
 
 
 
@@ -288,5 +288,3 @@ class AVLTreeList(object):
 	"""
 	def getRoot(self):
 		self.root
-
-
