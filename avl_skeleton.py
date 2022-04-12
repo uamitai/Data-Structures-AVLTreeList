@@ -1,8 +1,8 @@
 #username - complete info
 #id1      - 325541878 
 #name1    - Amitai Wolf 
-#id2      - complete info
-#name2    - complete info  
+#id2      - 214208704
+#name2    - Eivi Katz
 
 
 
@@ -13,13 +13,20 @@ class AVLNode(object):
 
 	@type value: str
 	@param value: data of your node
+
+	@type is_real: bool
+	@param is_real: is node real or virtual
 	"""
-	def __init__(self, value):
-		self.value = value
-		self.left = None
-		self.right = None
+	def __init__(self, value, is_real=True):
 		self.parent = None
-		self.height = -1
+		self.is_real = is_real
+
+		if is_real:
+			self.value = value
+			self.left = AVLNode(None, False)
+			self.right = self.left
+			self.height = 0
+			self.size = 1
 		
 
 	"""returns the left child
@@ -27,7 +34,7 @@ class AVLNode(object):
 	@returns: the left child of self, None if there is no left child
 	"""
 	def getLeft(self):
-		return self.left
+		return self.left if self.left.isRealNode() else None
 
 
 	"""returns the right child
@@ -36,7 +43,7 @@ class AVLNode(object):
 	@returns: the right child of self, None if there is no right child
 	"""
 	def getRight(self):
-		return self.right
+		return self.right if self.right.isRealNode() else None
 
 	"""returns the parent 
 
@@ -61,6 +68,14 @@ class AVLNode(object):
 	"""
 	def getHeight(self):
 		return self.height if self.isRealNode() else -1
+	
+	"""returns the size
+
+	@rtype: int
+	@returns: the size of self, 0 if the node is virtual
+	"""
+	def getSize(self):
+		return self.size if self.isRealNode() else 0
 
 	"""sets left child
 
@@ -68,7 +83,11 @@ class AVLNode(object):
 	@param node: a node
 	"""
 	def setLeft(self, node):
-		self.left = node
+		if self.isRealNode():
+			if node == None:
+				self.left = AVLNode(None, False)
+			else:
+				self.left = node
 
 	"""sets right child
 
@@ -76,7 +95,11 @@ class AVLNode(object):
 	@param node: a node
 	"""
 	def setRight(self, node):
-		self.right = node
+		if self.isRealNode():
+			if node == None:
+				self.right = AVLNode(None, False)
+			else:
+				self.right = node
 
 	"""sets parent
 
@@ -92,15 +115,26 @@ class AVLNode(object):
 	@param value: data
 	"""
 	def setValue(self, value):
-		self.value = value
+		if self.isRealNode():
+			self.value = value
 
-	"""sets the balance factor of the node
+	"""sets the height of the node
 
 	@type h: int
 	@param h: the height
 	"""
 	def setHeight(self, h):
-		self.height = h
+		if self.isRealNode():
+			self.height = h
+	
+	"""sets size factor of the node
+
+	@type s: int
+	@param s: the size
+	"""
+	def setSize(self, s):
+		if self.isRealNode():
+			self.size = s
 
 	"""returns whether self is not a virtual node 
 
@@ -108,7 +142,27 @@ class AVLNode(object):
 	@returns: False if self is a virtual node, True otherwise.
 	"""
 	def isRealNode(self):
-		return self.height > -1
+		return self.is_real
+	
+	"""updates height with respect to children
+	
+	"""
+	def updateHeight(self):
+		self.height = max(self.left.getHeight(), self.right.getHeight()) + 1
+	
+	"""updates size with respect to children
+	
+	"""
+	def updateSize(self):
+		self.size = self.left.getSize() + self.right.getSize() + 1
+	
+	"""returns the balance factor of self
+	
+	@rtype: int
+	@returns: balance factor
+	"""
+	def balanceFactor(self):
+		return self.left.getHeight() - self.right.getHeight()
 
 
 
@@ -124,7 +178,8 @@ class AVLTreeList(object):
 	"""
 	def __init__(self):
 		self.root = None
-		# add your fields here
+		self.first = None
+		self.last = None
 
 
 	"""returns whether the list is empty
@@ -133,7 +188,19 @@ class AVLTreeList(object):
 	@returns: True if the list is empty, False otherwise
 	"""
 	def empty(self):
-		return None
+		return self.length() == 0
+
+
+	"""does rotations to balance the AVL tree
+	
+	@type node: AVLNode
+	@param node: node to start fixing up from
+	@pre: node is in the tree
+	@rtype: int
+	@returns: the number of rebalancing operation due to AVL rebalancing 
+	"""
+	def balance(self, node):
+		return 0
 
 
 	"""retrieves the value of the i'th item in the list
@@ -145,7 +212,8 @@ class AVLTreeList(object):
 	@returns: the the value of the i'th item in the list
 	"""
 	def retrieve(self, i):
-		return None
+		return self.select(i + 1).getValue() #TODO self.select
+
 
 	"""inserts val at position i in the list
 
@@ -158,7 +226,43 @@ class AVLTreeList(object):
 	@returns: the number of rebalancing operation due to AVL rebalancing
 	"""
 	def insert(self, i, val):
-		return -1
+		z = AVLNode(val)
+
+		"insert in an empty tree"
+		if self.empty():
+			self.root = z
+			self.first = z
+			self.last = z
+			return 0
+
+		if i == self.length():
+
+			"find the maximum and make z its right child"
+			self.last().setRight(z)
+			z.setParent(self.last)
+			self.last = z
+		
+		else:
+
+			"find the node of rank i+1"
+			node = self.rank(i + 1) #TODO self.rank
+			if node.getLeft() == None:
+
+				"if it has no left child make z its left child"
+				node.setLeft(z)
+				z.setParent(node)
+				if i == 0:
+					self.first = z
+		
+			else:
+
+				"find its predecessor and make z its right child"
+				node = self.predecessor(node) #TODO self.predecessor
+				node.setRight(z)
+				z.setParent(node)
+
+		#TODO fix the tree
+		return self.balance(z)
 
 
 	"""deletes the i'th item in the list
@@ -171,6 +275,31 @@ class AVLTreeList(object):
 	"""
 	def delete(self, i):
 		return -1
+	
+
+	"""deletes a node from the tree
+	
+	@type node: AVLNode
+	@param node: node to be deleted
+	@pre: node has at most one child
+	"""
+	def deleteNode(self, node):
+		parent = node.getparent()
+		if node.getLeft() == None:
+
+			"node has no left child"
+			if node is parent.getLeft():
+				parent.setLeft(node.getRight())
+			elif node is parent.getRight():
+				parent.setRight(node.getRight())
+		
+		elif node.getRight() == None:
+
+			"node has no right child"
+			if node is parent.getLeft():
+				parent.setLeft(node.getLeft())
+			elif node is parent.getRight():
+				parent.setRight(node.getLeft())
 
 
 	"""returns the value of the first item in the list
@@ -179,7 +308,8 @@ class AVLTreeList(object):
 	@returns: the value of the first item, None if the list is empty
 	"""
 	def first(self):
-		return None
+		return self.first
+
 
 	"""returns the value of the last item in the list
 
@@ -187,7 +317,8 @@ class AVLTreeList(object):
 	@returns: the value of the last item, None if the list is empty
 	"""
 	def last(self):
-		return None
+		return self.last
+
 
 	"""returns an array representing list 
 
@@ -195,7 +326,22 @@ class AVLTreeList(object):
 	@returns: a list of strings representing the data structure
 	"""
 	def listToArray(self):
-		return None
+		array = []
+		node = self.first()
+
+		while True:
+			"append value to array"
+			array.append(node.getValue())
+
+			"exit if node is last in list"
+			if node is self.last():
+				break
+
+			"go to successor node"
+			node = self.successor(node) #TODO self.successor
+		
+		return array
+
 
 	"""returns the size of the list 
 
@@ -203,7 +349,8 @@ class AVLTreeList(object):
 	@returns: the size of the list
 	"""
 	def length(self):
-		return None
+		return self.root.getSize() if self.root != None else 0
+
 
 	"""splits the list at the i'th index
 
@@ -217,6 +364,7 @@ class AVLTreeList(object):
 	def split(self, i):
 		return None
 
+
 	"""concatenates lst to self
 
 	@type lst: AVLTreeList
@@ -227,6 +375,7 @@ class AVLTreeList(object):
 	def concat(self, lst):
 		return None
 
+
 	"""searches for a *value* in the list
 
 	@type val: str
@@ -235,8 +384,23 @@ class AVLTreeList(object):
 	@returns: the first index that contains val, -1 if not found.
 	"""
 	def search(self, val):
-		return None
+		i = 0
+		node = self.first()
 
+		while True:
+			"compare node's value to val"
+			if node.getValue().equals(val):
+				return i
+			
+			"exit if node is last in list"
+			if node is self.last():
+				break
+
+			"go to successor node"
+			i += 1
+			node = self.successor(node) #TODO self.successor
+			
+		return -1
 
 
 	"""returns the root of the tree representing the list
@@ -245,6 +409,82 @@ class AVLTreeList(object):
 	@returns: the root, None if the list is empty
 	"""
 	def getRoot(self):
+		return None if self.empty() else self.root
+	
+
+	"""returns the rank of a node in the tree
+	
+	@type node: AVLNode
+	@pre: node is inside the tree
+	@param node: node to find rank of
+	@rtype: int
+	@returns: rank of node
+	"""
+	def rank(self, node):
+		r = node.left.getSize() + 1
+		y = node
+
+		while y != None:
+			if y is y.getparent().getRight():
+				r += y.getParent().left.getSize() + 1
+			y = y.getParent()
+			
+		return r
+	
+
+	"""returns the i-th node of the tree's in-order list
+	
+	@type i: int
+	@pre: 0 <= i <= self.length()
+	@param i: rank to search for
+	@rtype: AVLNode
+	@returns: node with rank i
+	"""
+	def select(self, i):
 		return None
+	
+
+	"""returns the successor of a given node
+	
+	@type node: AVLNode
+	@pre: node is inside the tree
+	@param node: node to start searching from
+	@rtype: AVLNode
+	@returns: successor of node
+	"""
+	def successor(self, node):
+		if node.getRight() != None:
+			y = node.getRight()
+			while y.getLeft() != None:
+				y = y.getLeft()
+			return y
+		
+		x = node
+		y = node.getParent()
+		while y != None and x is y.getRight():
+			x = y
+			y = x.getParent()
+		return y
 
 
+	"""returns the predecessor of a given node
+	
+	@type node: AVLNode
+	@pre: node is inside the tree
+	@param node: node to start searching from
+	@rtype: AVLNode
+	@returns: predecessor of node
+	"""
+	def predecessor(self, node):
+		if node.getLeft() != None:
+			y = node.getLeft()
+			while y.getRight() != None:
+				y = y.getRight()
+			return y
+		
+		x = node
+		y = node.getParent()
+		while y != None and x is y.getLeft():
+			x = y
+			y = x.getParent()
+		return y
