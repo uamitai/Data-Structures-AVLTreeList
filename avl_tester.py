@@ -1,6 +1,11 @@
 from avl_skeleton import *
 from printree import *
 
+def print_tree(tree):
+    print(tree.listToArray())
+    for line in printree(tree.root):
+        print(line)
+
 def tester():
     tree = AVLTreeList()
     
@@ -12,16 +17,18 @@ def tester():
     tree.insert(1, 5)
     tree.insert(1, 6)
 
-    print(tree.listToArray())
-    for line in printree(tree.root):
-        print(line)
+    print_tree(tree)
+    
+    other = AVLTreeList()
+    other.insert(0, 8)
+    other.insert(1, 9)
+    other.insert(1, 10)
+    other.insert(3, 11)
 
-    print("delete")
-    tree.delete(3)
+    print_tree(other)
 
-    print(tree.listToArray())
-    for line in printree(tree.root):
-        print(line)
+    tree.concat(other)
+    print_tree(tree)
 
     arr_tree = tree.listToArray()
     if arr_tree.length != 5:

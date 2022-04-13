@@ -8,6 +8,9 @@
 
 """A class represnting a node in an AVL tree"""
 
+from ntpath import join
+
+
 class AVLNode(object):
 	"""Constructor, you are allowed to add more fields. 
 
@@ -286,16 +289,36 @@ class AVLTreeList(object):
 	@returns: the number of rebalancing operation due to AVL rebalancing
 	"""
 	def delete(self, i):
-		node = self.select(i+1)
+		node = self.select(i + 1)
+		res = self.deleteNode(node)
+		del(node)
+		return res
+
+
+	"""deletes a node in the list
+	
+	@type node: AVLNode
+	@param node: the node to be deleted
+	@pre: node is in the tree
+	@rtype: int
+	@returns: the number of rebalancing operation due to AVL rebalancing
+	"""
+	def deleteNode(self, node):
 		parent = node.getParent()
 
-		if (self.length() == 1 and i == 0) or self.empty():
+		if (self.length() == 1 and node is self.root) or self.empty():
+			"edge case for empty tree"
 			self.root = AVLNode(None)
 			return 0
 		
 		if node.getLeft() == None:
+			"node has no left child, bypass it for its right child"
+
 			if node is self.first:
+				"update first node"
 				self.first = self.successor(node)
+			
+			"set the child of node's parent"
 			if parent != None:
 				if node is parent.getLeft():
 					parent.setLeft(node.right)
@@ -303,12 +326,19 @@ class AVLTreeList(object):
 					parent.setRight(node.right)
 			else:
 				self.root = node.right
+			
+			"set the parent of node's child"
 			node.right.setParent(parent)
 			del(node.left)
 		
 		elif node.getRight() == None:
+			"node has no right child, bypass it for its left child"
+
 			if node is self.last:
+				"update last node"
 				self.last = self.predecessor(node)
+			
+			"set the child of node's parent"
 			if parent != None:
 				if node is parent.getLeft():
 					parent.setLeft(node.left)
@@ -316,12 +346,19 @@ class AVLTreeList(object):
 					parent.setRight(node.left)
 			else:
 				self.root = node.left
+			
+			"set the parent of node's child"
 			node.left.setParent(parent)
 			del(node.right)
 		
 		else:
+			"node has two children, replace node with its successor"
+			"find successor and delete its node from the tree"
+			"since it has no left child the recursion stops immediately"
 			succ = self.successor(node)
-			self.delete(self.rank(succ)-1)
+			self.deleteNode(succ)
+
+			"set all pointers of children, successor and parent"
 			succ.setLeft(node.left)
 			succ.setRight(node.right)
 			node.left.setParent(succ)
@@ -335,7 +372,7 @@ class AVLTreeList(object):
 			else:
 				self.root = succ
 		
-		return self.balance(parent)
+		return self.balance(parent) #TODO balance tree
 
 
 	"""returns the value of the first item in the list
@@ -353,7 +390,7 @@ class AVLTreeList(object):
 	@returns: the value of the last item, None if the list is empty
 	"""
 	def last(self):
-		return None if self.empty() else self.last
+		return None if self.empty() else self.last.getValue()
 
 
 	"""returns an array representing list 
@@ -422,17 +459,11 @@ class AVLTreeList(object):
 	@returns: the absolute value of the difference between the height of the AVL trees joined
 	"""
 	def concat(self, lst):
-
-		"delete the last node of self to use for join operation"
-		x = self.getLast()
-		root = self.getRoot()
-		self.delete(x) #TODO self.delete()
-		
-		dif = abs(self.root.getSize() - lst.root.getSize())
-		self.join(x, lst)
-		self.last = lst.last
-
-		#TODO balance tree
+		root = lst.getRoot()
+		node = self.last
+		self.deleteNode(node)
+		dif = root.getHeight() - self.root.getHeight()
+		self.join(node, lst)
 		return dif
 	
 	"""join operation on self and pther AVL tree
@@ -461,6 +492,7 @@ class AVLTreeList(object):
 		x.setRight(node)
 		node.setParent(x)
 		self.root = other.getRoot()
+		self.last = other.last
 		
 
 	"""searches for a *value* in the list
