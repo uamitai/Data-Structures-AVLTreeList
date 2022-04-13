@@ -174,6 +174,53 @@ class AVLNode(object):
 		return self.balanceFactor() in [-1, 0, 1]
 
 
+	"""join operation on self and pther AVL tree
+
+	@type x: AVLNode
+	@param x: node to join the trees with
+	@type other: AVLTreeList
+	@param other: tree to join with
+	"""
+	def joinRight(self, x, other):
+		x.setLeft(self)
+		self.setParent(x)
+
+		node = other
+		h = self.getHeight()
+		while node.getHeight() > h:
+			node = node.getLeft()
+
+		parent = node.getParent()
+		parent.setLeft(x)
+		x.setParent(parent)
+		node.setParent(x)
+		x.setRight(node)
+
+
+
+	"""join operation on self and pther AVL tree
+
+	@type x: AVLNode
+	@param x: node to join the trees with
+	@type other: AVLTreeList
+	@param other: tree to join with
+	"""
+	def joinLeft(self, x, other):
+		x.setRight(other.getRoot())
+		other.root.setParent(x)
+
+		node = self.getRoot()
+		h = other.root.getHeight()
+		while node.getHeight() > h:
+			node = node.getRight()
+
+		parent = node.getParent()
+		parent.setRight(x)
+		x.setParent(parent)
+		node.setParent(x)
+		x.setLeft(node)
+
+
 
 """
 A class implementing the ADT list, using an AVL tree.
@@ -329,7 +376,6 @@ class AVLTreeList(object):
 			
 			"set the parent of node's child"
 			node.right.setParent(parent)
-			del(node.left)
 		
 		elif node.getRight() == None:
 			"node has no right child, bypass it for its left child"
@@ -349,7 +395,6 @@ class AVLTreeList(object):
 			
 			"set the parent of node's child"
 			node.left.setParent(parent)
-			del(node.right)
 		
 		else:
 			"node has two children, replace node with its successor"
@@ -438,17 +483,26 @@ class AVLTreeList(object):
 	right is an AVLTreeList representing the list from index i+1, and val is the value at the i'th index.
 	"""
 	def split(self, i):
-		node = self.select(i + 1) #TODO self.select()
+		x = self.select(i + 1) #TODO self.select()
 		left = node.getLeft()
 		right = node.getRight()
+		parent = x.getParent()
 
-		parent = node
-		root = self.getRoot()
-		while parent is not root:
-			node = parent
-			parent = node.getParent()
-			if node is parent.getLeft():
-				pass # Do some join operations
+		while parent is not None:
+			if parent.getRight() == x:
+				if parent.getLeft().getHeight() > left.getHeight():
+					parent.getLeft().getRoot().joinLeft(left, parent)
+				elif parent.getLeft().getHeight() < left.getHeight():
+					parent.getLeft().getRoot().joinRight(left, parent)
+
+				
+
+
+			x = parent
+			parent = x.getParent()
+
+
+
 
 
 	"""concatenates lst to self
@@ -459,41 +513,32 @@ class AVLTreeList(object):
 	@returns: the absolute value of the difference between the height of the AVL trees joined
 	"""
 	def concat(self, lst):
-		root = lst.getRoot()
 		node = self.last
 		self.deleteNode(node)
-		dif = root.getHeight() - self.root.getHeight()
-		self.join(node, lst)
-		return dif
-	
-	"""join operation on self and pther AVL tree
+		diff = self.root.getHeight() - lst.getRoot().getHeight()
+		lst.first = self.first
+		self.last = lst.last
 
-	@type x: AVLNode
-	@param x: node to join the trees with
-	@type other: AVLTreeList
-	@param other: tree to join with
-	"""
-	def join(self, x, other):
+		if diff == 0:
+			node.setLeft(self.root)
+			self.root.setParent(node)
+			node.setRight(lst.root)
+			lst.root.setParent(node)
+			lst.first = self.first
+			self.last = lst.last
+			self.root, lst.root = node, node
+			return diff
 
-		"join self with x"
-		x.setLeft(self.getRoot())
-		self.root.setParent(x)
+		if diff > 0:
+			self.root.joinLeft(node, lst.root)
+			lst.root = self.root
+			return diff
 
-		"find node at other to join with such that the tree is balanced"
-		node = other.getRoot()
-		h = self.root.getHeight()
-		while node.getHeight() > h:
-			node = node.getLeft()
-		
-		"join trees at the found node"
-		parent = node.getParent()
-		parent.setLeft(x)
-		x.setParent(parent)
-		x.setRight(node)
-		node.setParent(x)
-		self.root = other.getRoot()
-		self.last = other.last
-		
+		self.root.joinRight(node, lst.root)
+		self.root = lst.root
+		return -diff
+
+
 
 	"""searches for a *value* in the list
 
