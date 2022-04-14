@@ -8,9 +8,6 @@
 
 """A class represnting a node in an AVL tree"""
 
-from ntpath import join
-
-
 class AVLNode(object):
 	"""Constructor, you are allowed to add more fields. 
 
@@ -24,6 +21,8 @@ class AVLNode(object):
 		if value != None:
 			self.left = AVLNode(None)
 			self.right = AVLNode(None)
+			self.left.setParent(self)
+			self.right.setParent(self)
 			self.height = 0
 			self.size = 1
 		
@@ -86,8 +85,7 @@ class AVLNode(object):
 			self.left = AVLNode(None)
 		else:
 			self.left = node
-		self.updateHeight()
-		self.updateSize()
+		self.update()
 
 	"""sets right child
 
@@ -99,8 +97,7 @@ class AVLNode(object):
 			self.right = AVLNode(None)
 		else:
 			self.right = node
-		self.updateHeight()
-		self.updateSize()
+		self.update()
 
 	"""sets parent
 
@@ -157,6 +154,10 @@ class AVLNode(object):
 	def updateSize(self):
 		self.setSize(self.left.getSize() + self.right.getSize() + 1)
 	
+	def update(self):
+		self.updateHeight()
+		self.updateSize()
+	
 	"""returns the balance factor of self
 	
 	@rtype: int
@@ -174,51 +175,99 @@ class AVLNode(object):
 		return self.balanceFactor() in [-1, 0, 1]
 
 
-	"""join operation on self and pther AVL tree
+	"""join operation between left and right with self
 
-	@type x: AVLNode
-	@param x: node to join the trees with
-	@type other: AVLTreeList
-	@param other: tree to join with
+	@type left: AVLNode
+	@param left: left subtree to join with
+	@type right: AVLNode
+	@param right: right subtree to join with
+	@pre: left.height < right.height
 	"""
-	def joinRight(self, x, other):
-		x.setLeft(self)
-		self.setParent(x)
+	def joinLR(self, left, right):
+		self.setLeft(left)
+		left.setParent(self)
 
-		node = other
-		h = self.getHeight()
+		node = right
+		h = left.getHeight()
 		while node.getHeight() > h:
-			node = node.getLeft()
+			node = node.left
 
 		parent = node.getParent()
-		parent.setLeft(x)
-		x.setParent(parent)
-		node.setParent(x)
-		x.setRight(node)
+		parent.setLeft(self)
+		self.setParent(parent)
+		node.setParent(self)
+		self.setRight(node)
 
+	"""join operation between left and right with self
 
-
-	"""join operation on self and pther AVL tree
-
-	@type x: AVLNode
-	@param x: node to join the trees with
-	@type other: AVLTreeList
-	@param other: tree to join with
+	@type left: AVLNode
+	@param left: left subtree to join with
+	@type right: AVLNode
+	@param right: right subtree to join with
+	@pre: left.height > right.height
 	"""
-	def joinLeft(self, x, other):
-		x.setRight(other.getRoot())
-		other.root.setParent(x)
+	def joinRL(self, left, right):
+		self.setRight(right)
+		right.setParent(self)
 
-		node = self.getRoot()
-		h = other.root.getHeight()
+		node = left
+		h = right.getHeight()
 		while node.getHeight() > h:
-			node = node.getRight()
+			node = node.right
 
 		parent = node.getParent()
-		parent.setRight(x)
-		x.setParent(parent)
-		node.setParent(x)
-		x.setLeft(node)
+		parent.setRight(self)
+		self.setParent(parent)
+		node.setParent(self)
+		self.setLeft(node)
+	
+	"""join operation between left and right with self
+
+	@type left: AVLNode
+	@param left: left subtree to join with
+	@type right: AVLNode
+	@param right: right subtree to join with
+	@pre: left.height = right.height
+	"""
+	def joinEq(self, left, right):
+		self.setLeft(left)
+		self.setRight(right)
+		left.setParent(self)
+		right.setParent(self)
+	
+	def join(self, left, right):
+		if left.getHeight() > right.getHeight():
+			self.joinRL(left, right)
+			return left
+		if left.getHeight() < right.getHeight():
+			self.joinLR(left, right)
+			return right
+		if left.getHeight() == right.getHeight():
+			self.joinEq(left, right)
+			return self
+	
+	"""turns node into an AVLTreeList type object, with self as root
+
+	@rtpye: AVLTreeList
+	@returns: the subtree of self as a list
+	"""
+	def toTreeList(self):
+		"construct an empty tree and set self as the root"
+		treeList = AVLTreeList()
+		if not self.isRealNode():
+			return treeList
+		treeList.root = self
+		self.setParent(None)
+
+		"get first and last nodes of the tree"
+		first, last = self, self
+		while first.getLeft() != None:
+			first = first.getLeft()
+		while last.getRight() != None:
+			last = last.getRight()
+		treeList.first, treeList.last = first, last
+		
+		return treeList
 
 
 
@@ -234,8 +283,8 @@ class AVLTreeList(object):
 	"""
 	def __init__(self):
 		self.root = AVLNode(None)
-		self.first = None
-		self.last = None
+		self.first = self.root
+		self.last = self.root
 
 
 	"""returns whether the list is empty
@@ -259,7 +308,11 @@ class AVLTreeList(object):
 		while node is not None:
 			node.updateSize()
 			node.updateHeight()
-			node = node.getParent()
+			if abs(node.balanceFactor()) < 2:
+				node = node.getParent()
+				continue
+			else:
+				rotation()
 		return -1
 
 
@@ -483,25 +536,23 @@ class AVLTreeList(object):
 	right is an AVLTreeList representing the list from index i+1, and val is the value at the i'th index.
 	"""
 	def split(self, i):
-		x = self.select(i + 1) #TODO self.select()
-		left = node.getLeft()
-		right = node.getRight()
-		parent = x.getParent()
+		node = self.select(i + 1)
+		val = node.getValue()
+		left = node.left
+		right = node.right
+		parent = node.getParent()
 
-		while parent is not None:
-			if parent.getRight() == x:
-				if parent.getLeft().getHeight() > left.getHeight():
-					parent.getLeft().getRoot().joinLeft(left, parent)
-				elif parent.getLeft().getHeight() < left.getHeight():
-					parent.getLeft().getRoot().joinRight(left, parent)
+		while node is not self.root:
+			if node is parent.getRight():
+				node = parent
+				parent = parent.getParent()
+				left = node.join(node.left, left)
+			elif node is parent.getLeft():
+				node = parent
+				parent = parent.getParent()
+				right = node.join(right, node.right)
 
-				
-
-
-			x = parent
-			parent = x.getParent()
-
-
+		return [left.toTreeList(), val, right.toTreeList()]
 
 
 
@@ -513,31 +564,18 @@ class AVLTreeList(object):
 	@returns: the absolute value of the difference between the height of the AVL trees joined
 	"""
 	def concat(self, lst):
+		if lst.empty():
+			return self.root.getHeight() + 1
+		if self.empty():
+			self = lst
+			return lst.root.getHeight() + 1
+
+		diff = abs(self.root.getHeight() - lst.root.getHeight())
 		node = self.last
 		self.deleteNode(node)
-		diff = self.root.getHeight() - lst.getRoot().getHeight()
-		lst.first = self.first
+		self.root = node.join(self.root, lst.root)
 		self.last = lst.last
-
-		if diff == 0:
-			node.setLeft(self.root)
-			self.root.setParent(node)
-			node.setRight(lst.root)
-			lst.root.setParent(node)
-			lst.first = self.first
-			self.last = lst.last
-			self.root, lst.root = node, node
-			return diff
-
-		if diff > 0:
-			self.root.joinLeft(node, lst.root)
-			lst.root = self.root
-			return diff
-
-		self.root.joinRight(node, lst.root)
-		self.root = lst.root
-		return -diff
-
+		return diff
 
 
 	"""searches for a *value* in the list

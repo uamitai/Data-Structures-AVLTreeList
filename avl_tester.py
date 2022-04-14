@@ -16,21 +16,28 @@ def tester():
     tree.insert(4, 4)
     tree.insert(4, 5)
     tree.insert(4, 6)
+    tree.insert(3, 7)
+    tree.insert(1, 8)
+    tree.insert(0, 9)
 
     print_tree(tree)
     
     other = AVLTreeList()
-    other.insert(0, 8)
+    """other.insert(0, 5)
     other.insert(1, 9)
     other.insert(1, 10)
-    other.insert(3, 11)
+    other.insert(3, 11)"""
 
-    print_tree(other)
+    lst = tree.split(9)
+    print_tree(lst[0])
+    print(lst[1])
+    print_tree(lst[2])
 
-    print(other.concat(tree))
-
-    print_tree(tree)
-    print("***********")
-    print_tree(other)
+    """
+    lst = tree.split(1)
+    print_tree(lst[0])
+    print(lst[1])
+    print_tree(lst[2])
+    """
 
 tester()
