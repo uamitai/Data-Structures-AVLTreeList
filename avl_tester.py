@@ -6,22 +6,20 @@ def print_tree(tree):
     for line in printree(tree.root):
         print(line)
 
+def insert(tree, val, i):
+    tree.insert(i, val)
+    print_tree(tree)
+
 def tester():
     tree = AVLTreeList()
     
-    tree.insert(0, 0)
-    print_tree(tree)
-    tree.insert(1, 1)
-    print_tree(tree)
-    tree.insert(2, 2)
-    print_tree(tree)
-    tree.insert(3, 3)
-    print_tree(tree)
-    tree.insert(4, 4)
+    insert(tree, 8, 0)
+    insert(tree, 5, 0)
+    insert(tree, 10, 2)
+    insert(tree, 4, 0)
+    insert(tree, 6, 2)
 
-
+    tree.delete(4)
     print_tree(tree)
-    print(tree.first())
-    print(tree.last())
 
 tester()
