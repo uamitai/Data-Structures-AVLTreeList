@@ -154,8 +154,10 @@ class AVLNode(object):
 		self.setSize(self.left.getSize() + self.right.getSize() + 1)
 	
 	def update(self):
+		height = self.getHeight()
 		self.updateHeight()
 		self.updateSize()
+		return abs(self.getHeight() - height)
 	
 	"""returns the balance factor of self
 	
@@ -305,14 +307,16 @@ class AVLTreeList(object):
 	@returns: the number of rebalancing operation due to AVL rebalancing 
 	"""
 	def balance(self, node):
+		balance_ops = 0
 		while node is not None:
-			node.update()
+			balance_ops += node.update()
 			if abs(node.balanceFactor()) == 2:
 				parent = node.parent
-				self.rotate(node)
+				balance_ops += self.rotate(node)
 				node = parent
 			else:
 				node = node.parent
+		return balance_ops
 
 	
 	def rotate(self, node):
@@ -466,7 +470,7 @@ class AVLTreeList(object):
 				z.setParent(node)
 
 		#TODO fix the tree
-		return self.balance(z)
+		return 1 + self.balance(z)
 
 
 	"""deletes the i'th item in the list
@@ -479,9 +483,10 @@ class AVLTreeList(object):
 	"""
 	def delete(self, i):
 		node = self.select(i + 1)
-		res = self.deleteNode(node)
+		parent = node.parent
+		self.deleteNode(node)
 		del(node)
-		return res
+		return self.balance(parent)
 
 
 	"""deletes a node in the list
@@ -558,8 +563,6 @@ class AVLTreeList(object):
 					parent.setRight(succ)
 			else:
 				self.root = succ
-		
-		return self.balance(parent) #TODO balance tree
 
 
 	"""returns the value of the first item in the list
@@ -788,3 +791,6 @@ class AVLTreeList(object):
 			node = pred
 			pred = node.getParent()
 		return pred
+	
+	def append(self, val):
+		return self.insert(self.length(), val)
