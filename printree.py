@@ -7,7 +7,8 @@ def printree(t, bykey = True):
         bykey=True: show keys instead of values"""
         #for row in trepr(t, bykey):
         #        print(row)
-        return trepr(t)
+        for line in trepr(t.root):
+                print(line)
 
 def trepr(t, bykey = False):
         """Return a list of textual representations of the levels in t
