@@ -4,7 +4,6 @@
 #id2      - 214208704
 #name2    - Eivi Katz
 
-from numpy import empty
 from printree import *
 
 """A class represnting a node in an AVL tree"""
@@ -220,14 +219,18 @@ class AVLNode(object):
 		if left.getHeight() > right.getHeight():
 			"left tree is bigger"
 			self.joinRL(left, right)
-			self.updateToNode(left)
-			return left
+			root = left
 
-		if left.getHeight() < right.getHeight():
+		elif left.getHeight() < right.getHeight():
 			"right tree is bigger"
 			self.joinLR(left, right)
-			self.updateToNode(right)
-			return right
+			root = right
+		
+		node = self
+		while node is not root:
+			node = node.parent
+			node.update()
+		return root
 	
 
 	"""join operation between left and right with self
@@ -326,13 +329,6 @@ class AVLNode(object):
 		treeList.head, treeList.tail = head, tail
 		
 		return treeList
-	
-	def updateToNode(self, root):
-		self.update()
-		node = self
-		while node is not root:
-			node = node.parent
-			node.update()
 
 
 
@@ -391,7 +387,14 @@ class AVLTreeList(object):
 
 		return balance_ops
 
-	
+	"""rotate the node to balance the tree
+
+	@type node: AVLNode
+	@param node: node to perform rotation from
+	@pre: balance factor of node is either 2 or -2
+	@rtype: int
+	@returns: number of rotations needed (either 1 or 2)
+	"""
 	def rotate(self, node):
 		if node.balanceFactor() == 2:
 
@@ -400,7 +403,8 @@ class AVLTreeList(object):
 				self.rotateR(node)
 				return 1
 			elif node.left.balanceFactor() == -1:
-				self.rotateLR(node)
+				self.rotateLR(node.left)
+				self.rotateR(node)
 				return 2
 		
 		elif node.balanceFactor() == -2:
@@ -410,82 +414,104 @@ class AVLTreeList(object):
 				self.rotateL(node)
 				return 1
 			elif node.right.balanceFactor() == 1:
-				self.rotateRL(node)
+				self.rotateRL(node.right)
+				self.rotateL(node)
 				return 2
 		
 		"shouldn't have come here"
 		return 0
 
+
+	"""perform rotation right
+	
+	"""
 	def rotateR(self, node):
+		parent = node.parent
 		left = node.left
-		#Connecting node with child's right son
+
+		"change node's left child to left's right child"
 		node.setLeft(left.right)
 		left.right.setParent(node)
 
+		"change left's right child to node"
 		left.setRight(node)
-		left.setParent(node.parent)
 		node.setParent(left)
 
+		"change left's parent to node's parent"
+		left.setParent(parent)
 		if node is self.root:
 			self.root = left
 		else:
-			if left.parent.left is node:
-				#Connecting node's parent with node's child
-				left.parent.setLeft(left)
+			if parent.left is node:
+				parent.setLeft(left)
 			else:
-				left.parent.setRight(left)
+				parent.setRight(left)
 
 
+	"""perform rotation left
+	
+	"""
 	def rotateL(self, node):
+		parent = node.parent
 		right = node.right
-		#Connecting node with child's left son
+		
+		"change node's right child to right's left child"
 		node.setRight(right.left)
 		right.left.setParent(node)
 
+		"change right's left child to node"
 		right.setLeft(node)
-		right.setParent(node.parent)
 		node.setParent(right)
 
+		"change right's parent to node's parent"
+		right.setParent(parent)
 		if node is self.root:
 			self.root = right
 		else:
-			if right.parent.right is node:
-				#Connecting node's parent with node's child
-				right.parent.setRight(right)
+			if parent.right is node:
+				parent.setRight(right)
 			else:
-				right.parent.setLeft(right)
+				parent.setLeft(right)
 
 
+	"""perform small rotation left
+	
+	"""
 	def rotateLR(self, node):
-		left = node.left
-		left_son = left.right
+		parent = node.parent
+		right = node.right
 
-		left_son.left.setParent(left)
-		left.setRight(left_son.left)
+		"change node's right child to right's left child"
+		right.left.setParent(node)
+		node.setRight(right.left)
 
-		node.setLeft(left_son)
-		left_son.setParent(node)
+		"change right's left child to node"
+		right.setLeft(node)
+		node.setParent(right)
 
-		left_son.setLeft(left)
-		left.setParent(left_son)
-
-		self.rotateR(node)
+		"change right's parent to node's parent"
+		parent.setLeft(right)
+		right.setParent(parent)
 
 	
+	"""perform small rotation right
+	
+	"""
 	def rotateRL(self, node):
-		right = node.right
-		right_son = right.left
+		parent = node.parent
+		left = node.left
 
-		right_son.right.setParent(right)
-		right.setLeft(right_son.right)
+		"change node's left child to left's right child"
+		left.right.setParent(node)
+		node.setLeft(left.right)
 
-		node.setRight(right_son)
-		right_son.setParent(node)
+		"change left's right child to node"
+		left.setRight(node)
+		node.setParent(left)
 
-		right_son.setRight(right)
-		right.setParent(right_son)
-
-		self.rotateL(node)
+		"change left's parent to node's parent"
+		parent.setRight(left)
+		left.setParent(parent)
 
 
 	"""retrieves the value of the i'th item in the list
