@@ -16,14 +16,19 @@ class AVLNode(object):
 	@param value: data of your node
 	"""
 	def __init__(self, value):
+
+		"virtual nodes only have value and size fields"
 		self.value = value
 		self.parent = None
 
 		if value != None:
+
+			"create two children, since they are virtual the recursion stops immediatly"
 			self.left = AVLNode(None)
 			self.right = AVLNode(None)
 			self.left.setParent(self)
 			self.right.setParent(self)
+
 			self.height = 0
 			self.size = 1
 		
@@ -44,6 +49,7 @@ class AVLNode(object):
 	def getRight(self):
 		return self.right if self.right.isRealNode() else None
 
+
 	"""returns the parent 
 
 	@rtype: AVLNode
@@ -51,6 +57,7 @@ class AVLNode(object):
 	"""
 	def getParent(self):
 		return self.parent
+
 
 	"""return the value
 
@@ -60,6 +67,7 @@ class AVLNode(object):
 	def getValue(self):
 		return self.value if self.isRealNode() else None
 
+
 	"""returns the height
 
 	@rtype: int
@@ -67,6 +75,7 @@ class AVLNode(object):
 	"""
 	def getHeight(self):
 		return self.height if self.isRealNode() else -1
+
 	
 	"""returns the size
 
@@ -75,6 +84,7 @@ class AVLNode(object):
 	"""
 	def getSize(self):
 		return self.size if self.isRealNode() else 0
+		
 
 	"""sets left child
 
@@ -82,11 +92,9 @@ class AVLNode(object):
 	@param node: a node
 	"""
 	def setLeft(self, node):
-		if node == None:
-			self.left = AVLNode(None)
-		else:
-			self.left = node
+		self.left = AVLNode(None) if node is None else node
 		self.update()
+
 
 	"""sets right child
 
@@ -94,11 +102,9 @@ class AVLNode(object):
 	@param node: a node
 	"""
 	def setRight(self, node):
-		if node == None:
-			self.right = AVLNode(None)
-		else:
-			self.right = node
+		self.right = AVLNode(None) if node is None else node
 		self.update()
+
 
 	"""sets parent
 
@@ -107,6 +113,8 @@ class AVLNode(object):
 	"""
 	def setParent(self, node):
 		self.parent = node
+
+
 	"""sets value
 
 	@type value: str
@@ -116,6 +124,7 @@ class AVLNode(object):
 		if self.isRealNode():
 			self.value = value
 
+
 	"""sets the height of the node
 
 	@type h: int
@@ -124,6 +133,7 @@ class AVLNode(object):
 	def setHeight(self, h):
 		if self.isRealNode():
 			self.height = h
+
 	
 	"""sets size factor of the node
 
@@ -134,6 +144,7 @@ class AVLNode(object):
 		if self.isRealNode():
 			self.size = s
 
+
 	"""returns whether self is not a virtual node 
 
 	@rtype: bool
@@ -141,12 +152,14 @@ class AVLNode(object):
 	"""
 	def isRealNode(self):
 		return self.value != None
+
 	
 	"""updates height with respect to children
 	
 	"""
 	def updateHeight(self):
 		self.setHeight(max(self.left.getHeight(), self.right.getHeight()) + 1)
+
 	
 	"""updates size with respect to children
 	
@@ -154,6 +167,12 @@ class AVLNode(object):
 	def updateSize(self):
 		self.setSize(self.left.getSize() + self.right.getSize() + 1)
 	
+
+	"""updates both size and height fields
+
+	@rtype: int
+	@returns: the change in height
+	"""
 	def update(self):
 		if self.isRealNode():
 			height = self.getHeight()
@@ -161,6 +180,7 @@ class AVLNode(object):
 			self.updateSize()
 			return abs(self.getHeight() - height)
 		return 0
+
 	
 	"""returns the balance factor of self
 	
@@ -169,6 +189,7 @@ class AVLNode(object):
 	"""
 	def balanceFactor(self):
 		return self.left.getHeight() - self.right.getHeight()
+
 	
 	"""returns if the balance factor is good
 	
@@ -177,6 +198,53 @@ class AVLNode(object):
 	"""
 	def notBalanced(self):
 		return abs(self.balanceFactor()) >= 2
+
+	
+	"""join operation between left and right with self
+
+	@type left: AVLNode
+	@param left: left subtree to join with
+	@type right: AVLNode
+	@param right: right subtree to join with
+	@rtype: AVLNode
+	@returns: the root of the new tree
+	"""
+	def join(self, left, right):
+
+		"divide by cases to get a balanced tree"
+		if abs(left.getHeight() - right.getHeight()) < 2:
+			"roughly equal height"
+			self.joinEq(left, right)
+			return self
+
+		if left.getHeight() > right.getHeight():
+			"left tree is bigger"
+			self.joinRL(left, right)
+			self.updateToNode(left)
+			return left
+
+		if left.getHeight() < right.getHeight():
+			"right tree is bigger"
+			self.joinLR(left, right)
+			self.updateToNode(right)
+			return right
+	
+
+	"""join operation between left and right with self
+
+	@type left: AVLNode
+	@param left: left subtree to join with
+	@type right: AVLNode
+	@param right: right subtree to join with
+	@pre: difference in height is -1, 0 or 1
+	"""
+	def joinEq(self, left, right):
+
+		"join trees the naive way"
+		self.setLeft(left)
+		self.setRight(right)
+		left.setParent(self)
+		right.setParent(self)
 
 
 	"""join operation between left and right with self
@@ -188,19 +256,24 @@ class AVLNode(object):
 	@pre: left.height < right.height
 	"""
 	def joinLR(self, left, right):
+
+		"set left root as child of self"
 		self.setLeft(left)
 		left.setParent(self)
 
+		"find node on the left side of right tree with similar height"
 		node = right
 		h = left.getHeight()
 		while node.getHeight() > h:
 			node = node.left
 
+		"connect the right tree to self at the found node"
 		parent = node.getParent()
 		parent.setLeft(self)
 		self.setParent(parent)
 		node.setParent(self)
 		self.setRight(node)
+
 
 	"""join operation between left and right with self
 
@@ -211,53 +284,32 @@ class AVLNode(object):
 	@pre: left.height > right.height
 	"""
 	def joinRL(self, left, right):
+
+		"set right root as child of self"
 		self.setRight(right)
 		right.setParent(self)
 
+		"find node on the right side of left tree with similar height"
 		node = left
 		h = right.getHeight()
 		while node.getHeight() > h:
 			node = node.right
 
+		"connect the left tree to self at the found node"
 		parent = node.getParent()
 		parent.setRight(self)
 		self.setParent(parent)
 		node.setParent(self)
 		self.setLeft(node)
 	
-	"""join operation between left and right with self
 
-	@type left: AVLNode
-	@param left: left subtree to join with
-	@type right: AVLNode
-	@param right: right subtree to join with
-	@pre: left.height = right.height
-	"""
-	def joinEq(self, left, right):
-		self.setLeft(left)
-		self.setRight(right)
-		left.setParent(self)
-		right.setParent(self)
-	
-	def join(self, left, right):
-		if abs(left.getHeight() - right.getHeight()) < 2:
-			self.joinEq(left, right)
-			return self
-		if left.getHeight() > right.getHeight():
-			self.joinRL(left, right)
-			self.updateToNode(left)
-			return left
-		if left.getHeight() < right.getHeight():
-			self.joinLR(left, right)
-			self.updateToNode(right)
-			return right
-	
 	"""turns node into an AVLTreeList type object, with self as root
 
 	@rtpye: AVLTreeList
 	@returns: the subtree of self as a list
 	"""
 	def toTreeList(self):
+
 		"construct an empty tree and set self as the root"
 		treeList = AVLTreeList()
 		if not self.isRealNode():
@@ -313,6 +365,8 @@ class AVLTreeList(object):
 	
 	@type node: AVLNode
 	@param node: node to start fixing up from
+	@type roll: bool
+	@param roll: allow rotating unbalanced nodes, True by default
 	@pre: node is in the tree
 	@rtype: int
 	@returns: the number of rebalancing operation due to AVL rebalancing 
@@ -320,18 +374,28 @@ class AVLTreeList(object):
 	def balance(self, node, roll=True):
 		balance_ops = 0
 		while node is not None:
+
+			"""update a node on the way to the root
+			when balancing a tree the most a height can change is by 1"""
 			balance_ops += node.update()
+
 			if node.notBalanced() and roll:
+
+				"save the parent, roll node and continue upwards"
 				parent = node.parent
 				balance_ops += self.rotate(node)
 				node = parent
+
 			else:
 				node = node.parent
+
 		return balance_ops
 
 	
 	def rotate(self, node):
 		if node.balanceFactor() == 2:
+
+			"rotate to the right"
 			if node.left.balanceFactor() in [0, 1]:
 				self.rotateR(node)
 				return 1
@@ -340,12 +404,17 @@ class AVLTreeList(object):
 				return 2
 		
 		elif node.balanceFactor() == -2:
+
+			"rotate to the left"
 			if node.right.balanceFactor() in [-1, 0]:
 				self.rotateL(node)
 				return 1
 			elif node.right.balanceFactor() == 1:
 				self.rotateRL(node)
 				return 2
+		
+		"shouldn't have come here"
+		return 0
 
 	def rotateR(self, node):
 		left = node.left
@@ -419,7 +488,6 @@ class AVLTreeList(object):
 		self.rotateL(node)
 
 
-
 	"""retrieves the value of the i'th item in the list
 
 	@type i: int
@@ -429,7 +497,7 @@ class AVLTreeList(object):
 	@returns: the the value of the i'th item in the list
 	"""
 	def retrieve(self, i):
-		return None if self.empty() else self.select(i + 1).getValue() #TODO self.select()
+		return None if self.empty() else self.select(i + 1).getValue()
 
 
 	"""inserts val at position i in the list
@@ -464,7 +532,7 @@ class AVLTreeList(object):
 		else:
 
 			"find the node of rank i+1"
-			node = self.select(i + 1) #TODO self.select()
+			node = self.select(i + 1)
 			if node.getLeft() == None:
 
 				"if it has no left child make z its left child"
@@ -476,11 +544,10 @@ class AVLTreeList(object):
 			else:
 
 				"find its predecessor and make z its right child"
-				node = self.predecessor(node) #TODO self.predecessor
+				node = self.predecessor(node)
 				node.setRight(z)
 				z.setParent(node)
 
-		#TODO fix the tree
 		return 1 + self.balance(z)
 
 
@@ -495,8 +562,10 @@ class AVLTreeList(object):
 	def delete(self, i):
 		if self.empty():
 			return 0
+		
+		"find node at index i, remove it from the tree and delete"
 		node = self.select(i + 1)
-		res = self.deleteNode(node)
+		res = self.remove(node)
 		del(node)
 		return res
 
@@ -505,19 +574,21 @@ class AVLTreeList(object):
 	
 	@type node: AVLNode
 	@param node: the node to be deleted
+	@type roll: bool
+	@param roll: rotate unbalanced nodes after deleting, True by default
 	@pre: node is in the tree
 	@rtype: int
 	@returns: the number of rebalancing operation due to AVL rebalancing
 	"""
-	def deleteNode(self, node, roll=True):
+	def remove(self, node, roll=True):
 		parent = node.getParent()
 
 		if self.length() == 1 and node is self.root:
-			"edge case for empty tree"
+			"empty the tree"
 			self.root = AVLNode(None)
 			self.head = self.root
 			self.tail = self.root
-			return self.root
+			return 0
 		
 		if node is self.head:
 			"update head node"
@@ -561,16 +632,18 @@ class AVLTreeList(object):
 			"find successor and delete its node from the tree"
 			"since it has no left child the recursion stops immediately"
 			succ = self.successor(node)
-			res = self.deleteNode(succ, roll)
-			parent = node.parent #AAAAAHHHHHHHHHHHHHHH
+			res = self.remove(succ, roll)
+			parent = node.parent
 			if node is self.tail:
-				self.tail = succ #AAAAAAAAAAHHHHHHHHHHHHHHHH again
+				self.tail = succ
 
-			"set all pointers of children, successor and parent"
+			"set successor's children"
 			succ.setLeft(node.left)
 			succ.setRight(node.right)
 			node.left.setParent(succ)
 			node.right.setParent(succ)
+
+			"set successor's parent"
 			succ.setParent(parent)
 			if parent != None:
 				if node is parent.getLeft():
@@ -630,7 +703,7 @@ class AVLTreeList(object):
 			array.append(node.getValue())
 
 			"go to successor node"
-			node = self.successor(node) #TODO self.sucessor
+			node = self.successor(node)
 		
 		return array
 
@@ -654,6 +727,8 @@ class AVLTreeList(object):
 	right is an AVLTreeList representing the list from index i+1, and val is the value at the i'th index.
 	"""
 	def split(self, i):
+
+		"get node to split from"
 		node = self.select(i + 1)
 		val = node.getValue()
 		left = node.left
@@ -662,10 +737,15 @@ class AVLTreeList(object):
 
 		while node is not self.root:
 			if node is parent.getRight():
+
+				"join left trees"
 				node = parent
 				parent = parent.getParent()
 				left = node.join(node.left, left)
+
 			elif node is parent.getLeft():
+
+				"join right trees"
 				node = parent
 				parent = parent.getParent()
 				right = node.join(right, node.right)
@@ -776,13 +856,16 @@ class AVLTreeList(object):
 		node = self.getRoot()
 		rank = node.left.getSize() + 1
 		while i != rank:
+
 			if i < rank:
 				"search in the left subtree with i"
 				node = node.left
+
 			if i > rank:
 				"search in the right subtree with i-rank"
 				node = node.right
 				i -= rank
+
 			rank = node.left.getSize() + 1
 		return node
 	
