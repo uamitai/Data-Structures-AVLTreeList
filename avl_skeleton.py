@@ -375,7 +375,7 @@ class AVLTreeList(object):
 			when balancing a tree the most a height can change is by 1"""
 			balance_ops += node.update()
 
-			if node.notBalanced() and roll:
+			if roll and node.notBalanced():
 
 				"save the parent, roll node and continue upwards"
 				parent = node.parent
@@ -617,22 +617,21 @@ class AVLTreeList(object):
 			return 0
 		
 		if node is self.head:
-			"update head node"
 			self.head = self.successor(node)
+			
 		if node is self.tail:
-			"update tail node"
 			self.tail = self.predecessor(node)
 		
 		if node.getLeft() == None:
 			"node has no left child, bypass it for its right child"
 			"set the child of node's parent"
-			if parent != None:
+			if node is self.root:
+				self.root = node.right
+			else:
 				if node is parent.getLeft():
 					parent.setLeft(node.right)
 				elif node is parent.getRight():
 					parent.setRight(node.right)
-			else:
-				self.root = node.right
 			
 			"set the parent of node's child"
 			node.right.setParent(parent)
@@ -641,13 +640,13 @@ class AVLTreeList(object):
 		elif node.getRight() == None:
 			"node has no right child, bypass it for its left child"
 			"set the child of node's parent"
-			if parent != None:
+			if node is self.root:
+				self.root = node.left
+			else:
 				if node is parent.getLeft():
 					parent.setLeft(node.left)
 				elif node is parent.getRight():
 					parent.setRight(node.left)
-			else:
-				self.root = node.left
 			
 			"set the parent of node's child"
 			node.left.setParent(parent)
@@ -671,16 +670,22 @@ class AVLTreeList(object):
 
 			"set successor's parent"
 			succ.setParent(parent)
-			if parent != None:
+			if node is self.root:
+				self.root = succ
+			else:
 				if node is parent.getLeft():
 					parent.setLeft(succ)
 				elif node is parent.getRight():
 					parent.setRight(succ)
-			else:
-				self.root = succ
 			return res
 	
-	def deleteTail(self):
+
+	"""removes the last node in the tree for concat operation
+
+	if you find why this method is different than calling the standard remove method with self.tail
+	please send your answers to amitaiwolf@mail.tau.ac.il
+	"""
+	def removeTail(self):
 		tail = self.tail
 		if tail is self.root:
 			self.root = tail.left
@@ -690,8 +695,7 @@ class AVLTreeList(object):
 			self.tail = self.predecessor(tail)
 			tail.parent.setRight(tail.left)
 			tail.left.setParent(tail.parent)
-		tail.setParent(None)
-		tail.setLeft(None)
+		return self.balance(self.tail, False)
 
 
 	"""returns the value of the first item in the list
@@ -801,12 +805,8 @@ class AVLTreeList(object):
 
 		"delete the tail of self to use in join op"
 		tail = self.tail
-		self.deleteTail()
-		node = self.tail
-		while node is not self.root:
-			node.update()
-			node = node.parent
-		self.root.update()
+		self.removeTail()
+		tail.setParent(None)
 		self.root = tail.join(self.root, lst.root)
 		self.tail = lst.tail
 
