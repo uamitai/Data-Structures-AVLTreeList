@@ -695,7 +695,7 @@ class AVLTreeList(object):
 			self.tail = self.predecessor(tail)
 			tail.parent.setRight(tail.left)
 			tail.left.setParent(tail.parent)
-		return self.balance(self.tail, False)
+		return self.balance(tail.parent, False)
 
 
 	"""returns the value of the first item in the list
@@ -819,7 +819,7 @@ class AVLTreeList(object):
 	@type val: str
 	@param val: a value to be searched
 	@rtype: int
-	@returns: the head index that contains val, -1 if not found.
+	@returns: the first index that contains val, -1 if not found.
 	"""
 	def search(self, val):
 		i = 0
@@ -843,31 +843,6 @@ class AVLTreeList(object):
 	"""
 	def getRoot(self):
 		return None if self.empty() else self.root
-	
-
-	"""returns the rank of a node in the tree
-	
-	@type node: AVLNode
-	@pre: node is inside the tree
-	@param node: node to find rank of
-	@rtype: int
-	@returns: rank of node
-	"""
-	def rank(self, node):
-		rank = node.left.getSize() + 1
-		root = self.getRoot()
-		parent = node
-
-		"go up to the root"
-		while parent is not root:
-			node = parent
-			parent = node.getParent()
-
-			"every time we go up left add the size of parent's left subtree"
-			if node is parent.getRight():
-				rank += parent.left.getSize() + 1
-
-		return rank
 	
 
 	"""returns the i-th node of the tree's in-order list
@@ -944,6 +919,7 @@ class AVLTreeList(object):
 			node = pred
 			pred = node.getParent()
 		return pred
+	
 	
 	"""methods for tester, delete when done"""
 	def append(self, val):
