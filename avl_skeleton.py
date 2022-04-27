@@ -523,7 +523,7 @@ class AVLTreeList(object):
 	@returns: the the value of the i'th item in the list
 	"""
 	def retrieve(self, i):
-		return None if self.empty() else self.select(i + 1).getValue()
+		return self.select(i + 1).getValue()
 
 
 	"""inserts val at position i in the list
@@ -549,18 +549,15 @@ class AVLTreeList(object):
 			return 0
 
 		if i == self.length():
-
 			"find the maximum and make z its right child"
 			self.tail.setRight(z)
 			z.setParent(self.tail)
 			self.tail = z
 		
 		else:
-
 			"find the node of rank i+1"
 			node = self.select(i + 1)
 			if node.getLeft() == None:
-
 				"if it has no left child make z its left child"
 				node.setLeft(z)
 				z.setParent(node)
@@ -568,7 +565,6 @@ class AVLTreeList(object):
 					self.head = z
 		
 			else:
-
 				"find its predecessor and make z its right child"
 				node = self.predecessor(node)
 				node.setRight(z)
@@ -815,7 +811,6 @@ class AVLTreeList(object):
 
 
 	"""searches for a *value* in the list
-
 	@type val: str
 	@param val: a value to be searched
 	@rtype: int

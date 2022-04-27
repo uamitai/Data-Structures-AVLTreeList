@@ -1,6 +1,8 @@
 from avl_skeleton import *
 from printree import *
+class testAVLList(unittest.TestCase):
 
+<<<<<<< Updated upstream
 
 def tester():
     T = AVLTreeList()
@@ -18,5 +20,27 @@ def tester():
     printree(T2)
     print(T2.length())
     
+=======
+    emptyList = AVLTreeList()
+    twentyTree = AVLTreeList()
+    twentylist = []
+>>>>>>> Stashed changes
 
-tester()
+    def compare_with_list_by_in_order(self, tree, lst):
+        def rec(node, cnt, lst):
+            if node.isRealNode():
+                rec(node.getLeft(), cnt, lst)
+                self.assertEqual(node.getValue(), lst[cnt[0]])
+                cnt[0] += 1
+                rec(node.getRight(), cnt, lst)
+
+        cnt = [0]
+        if not tree.empty():
+            rec(tree.getRoot(), cnt, lst)
+        else:
+            self.assertEqual(len(lst), 0)
+
+
+
+t = testAVLList()
+t.compare_with_list_by_in_order()
